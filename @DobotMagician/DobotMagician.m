@@ -2,7 +2,7 @@ classdef DobotMagician < handle
 properties
     model;
     qlimReal = deg2rad([-135 135; -5 85; -10 95; -90 90; -90 90]);
-    qn = [0 pi/6 0 0 0];
+    qn = [0 pi/6 pi/3 0 0];
     qz = [0 0 0 0 0];
 end
 
@@ -27,20 +27,20 @@ function CreateRobot(self)
 end
 
 function Plot(self, q)
-    self.model.plot(q,'scale',0.7);
+    % create the model
+    self.model.plot(q,'scale',0.7); 
 end
-
 end
 
 methods(Static)
 function qModel = qRealToModel(qReal)
     % real robot specifies q3 relative to q2
+    % source: notes on dobot real vs model arm
     qModel = qReal;
     qModel(:,3) = pi/2 - qReal(:,2) + qReal(:,3);
     
     % l4 is always parallel to ground
     qModel(:,4) = pi/2 - qReal(:,3);
-    
 end
 
 function qReal = qModelToReal(qModel)
