@@ -28,8 +28,20 @@ end
 
 function Plot(self, q)
     % create the model
+    q = self.qRealToModel(q);
     self.model.plot(q,'scale',0.7); 
 end
+
+function Animate(self, q)
+    q = self.qRealToModel(q);
+    self.model.animate(q);
+end
+
+function T = Fkine(self, q)
+    q = self.qRealToModel(q);
+    T = self.model.fkine(q);
+end
+
 end
 
 methods(Static)
