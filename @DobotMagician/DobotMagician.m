@@ -42,6 +42,11 @@ function T = Fkine(self, q)
     T = self.model.fkine(q);
 end
 
+function qReal = GetPos(self)
+    qModel = self.model.getpos();
+    qReal = qModelToReal(qModel);
+end
+
 end
 
 methods(Static)
