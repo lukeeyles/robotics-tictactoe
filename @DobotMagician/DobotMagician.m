@@ -44,7 +44,7 @@ end
 
 function qReal = GetPos(self)
     qModel = self.model.getpos();
-    qReal = qModelToReal(qModel);
+    qReal = self.qModelToReal(qModel);
 end
 
 end
