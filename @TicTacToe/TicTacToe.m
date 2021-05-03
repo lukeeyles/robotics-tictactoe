@@ -17,7 +17,7 @@ function Game(self, difficulty)
             move = CalculateMove(self,player,difficulty);
         end
         PlayMove(self,move(1),move(2),player);
-        self.board
+        PrintBoard();
     end
     
     if CheckWin(self) > 0
@@ -139,6 +139,27 @@ end
 function Reset(self)
     self.board = zeros(3);
 end
+
+function PrintBoard(self)
+    for row = 1:size(self.board,1)
+        for col = 1:size(self.board,2)
+            if self.board(row,col) == 1
+                fprintf(" X ");
+            elseif self.board(row,col) == 2
+                fprintf(" O ");
+            else
+                fprintf("   ");
+            end
+            if col < size(self.board,2)
+                fprintf("|");
+            end
+        end
+        if row < size(self.board,1)
+            fprintf("\n-----------\n");
+        end
+    end
+end
+
 end
 
 methods(Static)
