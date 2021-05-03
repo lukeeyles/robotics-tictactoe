@@ -1,32 +1,19 @@
-function manual (self, v)
+function manual (self, v, gain)
 manual_mode = 1 % turn on manual movement
-robot = DobotMagician();
+robot = self.dobot;
 
+%startpos = transl(0.1, 0.1, 0.1);
+%qstart = robot.Ikine(startpos);
+%robot.Plot(qstart);
 
-
-startpos = transl(0.1, 0.1, 0.1);
-qstart = robot.Ikine(startpos);
-robot.Plot(qstart);
-
-
-while (manual_mode == 1);
-currentpos = robot.GetPos();
-oldpos = robot.Fkine(currentpos)
-
-
+% find current joint positions
+oldq = robot.GetPos();
+oldpos = robot.Fkine(oldq);
 steps = 100;
 
-    newpos = oldpos*transl(v);
-    q1= robot.Ikine(oldpos);
-    q2 = robot.Ikine(newpos);
-    qMatrix = jtraj(q1,q2, steps);
-    robot.Plot(qMatrix);
-
-
-
-
-
-end
-
-
+% translate proportional to velocity given
+newpos = oldpos*transl(gain*v);
+q2 = robot.Ikine(newpos);
+qMatrix = jtraj(oldq,q2, steps);
+robot.Animate(qMatrix);
 end
