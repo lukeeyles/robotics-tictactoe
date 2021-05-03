@@ -33,8 +33,10 @@ function Plot(self, q)
 end
 
 function Animate(self, q)
-    q = self.qRealToModel(q);
-    self.model.animate(q);
+    for i = 1:size(q,1)
+        qmodel = self.qRealToModel(q(i,:));
+        self.model.animate(qmodel);
+    end
 end
 
 function T = Fkine(self, q)
