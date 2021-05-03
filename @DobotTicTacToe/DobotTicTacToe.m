@@ -8,7 +8,10 @@ end
 
 methods
 function self = DobotTicTacToe()
+    try
     self.cam = webcam(2);
+    catch e
+    end
 end
 
 function board = SenseBoardState(self)
