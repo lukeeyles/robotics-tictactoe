@@ -1,5 +1,5 @@
-function manual (self, v, gain)
-manual_mode = 1 % turn on manual movement
+function manual (self, v, gain, steps)
+manual_mode = 1; % turn on manual movement
 robot = self.dobot;
 
 %startpos = transl(0.1, 0.1, 0.1);
@@ -9,7 +9,6 @@ robot = self.dobot;
 % find current joint positions
 oldq = robot.GetPos();
 oldpos = robot.Fkine(oldq);
-steps = 100;
 
 % translate proportional to velocity given
 newpos = oldpos*transl(gain*v);
