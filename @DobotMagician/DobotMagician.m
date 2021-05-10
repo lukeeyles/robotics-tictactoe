@@ -35,15 +35,18 @@ function Plot(self, q)
         self.model.faces{linkIndex} = faceData;
         self.model.points{linkIndex} = vertexData;
     end
+    [faceData, vertexData, plyData{self.model.n+1}] = plyread(['Dob5.ply'],'tri');
+    self.model.faces{self.model.n+1} = faceData;
+    self.model.points{self.model.n+1} = vertexData;
     
     % display robot
     q = self.qRealToModel(q);
     self.model.plot3d(q,'workspace',self.workspace);
     if isempty(findobj(get(gca,'Children'),'Type','Light'))
         camlight
-    end  
+    end
     self.model.delay = 0;
-
+        
 %     % try to load colours
 %     for linkIndex = 1:self.model.n
 %         handles = findobj('Tag', self.model.name);
