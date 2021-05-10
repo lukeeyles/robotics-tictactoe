@@ -1,7 +1,7 @@
 function [qReal, error] = Ikine(self, T)
     % must define this function as robot does not move joints independently
     % source: James Poon notes on dobot real vs model arm
-    qReal = zeros(1,5);
+    qReal = zeros(1,4);
     qReal(1) = atan2(T(2,4),T(1,4));
     
     % account for offset of end effector from 4th joint
@@ -24,9 +24,9 @@ function [qReal, error] = Ikine(self, T)
     qReal(2) = pi/2 - alpha;
     qReal(3) = pi - beta - alpha;
     
-    % rotate q5 to match the specified z direction
+    % rotate q4 to match the specified z direction
     rpy = tr2rpy(T);
-    qReal(5) = rpy(3)-qReal(1);
+    qReal(4) = rpy(3)-qReal(1);
     
     % clamp values to qlim
     qReal = clamp(qReal, self.qlimReal(:,1)', self.qlimReal(:,2)');
