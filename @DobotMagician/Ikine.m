@@ -10,7 +10,7 @@ function [qReal, error] = Ikine(self, T)
     
     x = TOffset(1,4); 
     y = TOffset(2,4); 
-    z = TOffset(3,4) - self.model.d(1); % account for height of 1st link
+    z = TOffset(3,4) - self.model.d(1) - self.model.base(3,4); % account for height of 1st link
     l = sqrt(x^2 + y^2);
     D = sqrt(l^2 + z^2);
     D = min(self.model.a(2) + self.model.a(3) - 0.0001, D); % clamp to reach of robot
