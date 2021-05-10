@@ -1,6 +1,7 @@
 classdef DobotMagician < handle
 properties
     model;
+    workspace = [-1 1 -1 1 -0.1 1];
     qlimReal = deg2rad([-135 135; -5 85; -10 95; -90 90; -90 90]);
     qn = [0 pi/6 pi/3 0 0];
     qz = [0 0 0 0 0];
@@ -24,12 +25,39 @@ function CreateRobot(self)
     L(5) = Link('d',-0.05,'a',0,'alpha',0,'offset',0,'qlim', deg2rad([-85,85]));
     
     self.model = SerialLink(L,'name',name);
+    self.model.base = transl(0,0,-0.138); % same coordinate system as manual
 end
 
 function Plot(self, q)
-    % create the model
+    % load ply files
+    for linkIndex = 1:self.model.n
+        [faceData, vertexData, plyData{linkIndex}] = plyread(['Dob',num2str(linkIndex),'.ply'],'tri');
+        self.model.faces{linkIndex} = faceData;
+        self.model.points{linkIndex} = vertexData;
+    end
+    
+    % display robot
     q = self.qRealToModel(q);
-    self.model.plot(q,'scale',0.7); 
+    self.model.plot3d(q,'workspace',self.workspace);
+    if isempty(findobj(get(gca,'Children'),'Type','Light'))
+        camlight
+    end  
+    self.model.delay = 0;
+
+%     % try to load colours
+%     for linkIndex = 1:self.model.n
+%         handles = findobj('Tag', self.model.name);
+%         h = get(handles,'UserData');
+%         try 
+%             h.link(linkIndex).Children.FaceVertexCData = [plyData{linkIndex}.vertex.red ...
+%                                                           , plyData{linkIndex}.vertex.green ...
+%                                                           , plyData{linkIndex}.vertex.blue]/255;
+%             h.link(linkIndex).Children.FaceColor = 'interp';
+%         catch ME_1
+%             disp(ME_1);
+%             continue;
+%         end
+%     end
 end
 
 function Animate(self, q)
