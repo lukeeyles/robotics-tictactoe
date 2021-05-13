@@ -68,20 +68,20 @@ end
 
 function Plot(self, q)
 %     % load ply files
-%     for linkIndex = 1:self.model.n+1
-%         [faceData, vertexData, plyData{linkIndex}] = plyread(['Dobot',num2str(linkIndex),'.ply'],'tri');
-%         self.model.faces{linkIndex} = faceData;
-%         self.model.points{linkIndex} = vertexData;
-%     end
-%     
+    for linkIndex = 1:self.model.n+1
+        [faceData, vertexData, plyData{linkIndex}] = plyread(['Dobot',num2str(linkIndex),'.ply'],'tri');
+        self.model.faces{linkIndex} = faceData;
+        self.model.points{linkIndex} = vertexData;
+    end
+    
     % display robot
     q = self.qRealToModel(q);
-    self.model.plot(q);
-%     self.model.plot3d(q,'workspace',self.workspace);
-%     if isempty(findobj(get(gca,'Children'),'Type','Light'))
-%         camlight
-%     end
-%     self.model.delay = 0;
+    %self.model.plot(q);
+    self.model.plot3d(q,'workspace',self.workspace);
+    if isempty(findobj(get(gca,'Children'),'Type','Light'))
+        camlight
+    end
+    self.model.delay = 0;
         
 %     % try to load colours
 %     for linkIndex = 1:self.model.n
@@ -103,6 +103,7 @@ function Animate(self, q)
     for i = 1:size(q,1)
         qmodel = self.qRealToModel(q(i,:));
         self.model.animate(qmodel);
+        drawnow;
     end
 end
 
