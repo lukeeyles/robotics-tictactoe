@@ -67,7 +67,7 @@ function CreateRobot(self)
 end
 
 function Plot(self, q)
-%     % load ply files
+    % load ply files
     for linkIndex = 1:self.model.n+1
         [faceData, vertexData, plyData{linkIndex}] = plyread(['Dobot',num2str(linkIndex),'m.ply'],'tri');
         self.model.faces{linkIndex} = faceData;
@@ -83,20 +83,20 @@ function Plot(self, q)
     end
     self.model.delay = 0;
         
-%     % try to load colours
-%     for linkIndex = 1:self.model.n
-%         handles = findobj('Tag', self.model.name);
-%         h = get(handles,'UserData');
-%         try 
-%             h.link(linkIndex).Children.FaceVertexCData = [plyData{linkIndex}.vertex.red ...
-%                                                           , plyData{linkIndex}.vertex.green ...
-%                                                           , plyData{linkIndex}.vertex.blue]/255;
-%             h.link(linkIndex).Children.FaceColor = 'interp';
-%         catch ME_1
-%             disp(ME_1);
-%             continue;
-%         end
-%     end
+    % try to load colours
+    for linkIndex = 1:self.model.n
+        handles = findobj('Tag', self.model.name);
+        h = get(handles,'UserData');
+        try 
+            h.link(linkIndex).Children.FaceVertexCData = [plyData{linkIndex}.vertex.red ...
+                                                          , plyData{linkIndex}.vertex.green ...
+                                                          , plyData{linkIndex}.vertex.blue]/255;
+            h.link(linkIndex).Children.FaceColor = 'interp';
+        catch ME_1
+            disp(ME_1);
+            continue;
+        end
+    end
 end
 
 function Animate(self, q)
