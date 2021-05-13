@@ -1,18 +1,31 @@
-function PlayGame(self,difficulty,tilesize)
+function PlayGame(self,difficulty)
 self.game.Reset();
 
-qDefault = [0 pi/6 pi/4 0 0];
+% if self.realrobot
+%     self.dobot.InitaliseRobot();
+%     pause();
+% end
+
+qDefault = [0 pi/6 pi/4 0];
 self.dobot.Plot(qDefault);
+
+if self.realrobot
+    self.dobot.PublishTargetJoint(qDefault)
+end
+
 hold on;
-pause();
 
 % % use webcam to sense board + tile positions
 % [boardloc,tileloc] = SenseBoardandTiles();
 
 % hardcode locations of board and tiles
-boardloc = transl([0.2 0 0.05]);
-tileloc = cat(3,transl(0.15,-0.1,0.05),transl(0.2,0.1,0.05),transl(0.25,0.1,0.05)...
-        ,transl(0.2,-0.1,0.05),transl(0.25,-0.1,0.05));
+tilesize = 0.04;
+tableheight = -0.12;
+centredistance = 0.155/2;
+boardloc = transl([0.11+centredistance 0 tableheight]);
+tileloc = cat(3,transl(0.05+centredistance,-0.08,tableheight),...
+    transl(0.1+centredistance,-0.08,tableheight),transl(0.15+centredistance,-0.08,tableheight),...
+    transl(0.05+centredistance,0.08,tableheight),transl(0.1+centredistance,0.08,tableheight));
 
 % generate locations for all board squares
 boardsquares = zeros(4,4,3,3);
@@ -23,11 +36,10 @@ for row = 1:3
 end
 
 % define pickup transform to pick up tiles
-%pickupT = trotz(pi/2);
 pickupT = transl(0,0,0);
 
 % robot is player 2, human is player 1
-player2tilei = 1;
+tilei = 1;
 h = PlotTiles(tileloc);
 player = randi(2);
 
@@ -61,41 +73,52 @@ while self.game.CheckWin < 0
         moveloc = boardsquares(:,:,move(1),move(2));
         
         % find poses to pick up and place down tile
+        steps = 20;
         Q(1,:) = qDefault; % start at qn
-        [Q(2,:),error1] = self.dobot.Ikine(tileloc(:,:,player2tilei)*pickupT); % go to tile
+        [Q(2,:),error1] = self.dobot.Ikine(tileloc(:,:,tilei)*pickupT); % go to tile
         Q(3,:) = qDefault; % move back to qn
         [Q(4,:),error2] = self.dobot.Ikine(moveloc*pickupT); % place down tile
-        Q(5,:) = qDefault; % back to qn
-        qtotile = jtraj(Q(1,:),Q(2,:),20);
-        qpickedup = [jtraj(Q(2,:),Q(3,:),20);jtraj(Q(3,:),Q(4,:),20)];
-        qfromtile = jtraj(Q(4,:),Q(5,:),20);
-        error1
         error2
+        Q(5,:) = qDefault; % back to qn
+        qtotile = jtraj(Q(1,:),Q(2,:),steps);
+        qpickedup = [jtraj(Q(2,:),Q(3,:),steps);jtraj(Q(3,:),Q(4,:),steps)];
+        qfromtile = jtraj(Q(4,:),Q(5,:),steps);
         
-        % move real robot...
+        % move real robot
+        if self.realrobot
+            t = 1;
+            self.dobot.PublishTargetJoint(Q(1,:));
+            pause(t);
+            self.dobot.PublishTargetJoint(Q(2,:));
+            pause(t);
+            self.dobot.PublishToolState(1);
+            pause(0.5);
+            self.dobot.PublishTargetJoint(Q(3,:));
+            pause(t+0.5);
+            self.dobot.PublishTargetJoint(Q(4,:));
+            pause(t);
+            self.dobot.PublishToolState(0);
+            pause(0.5);
+            self.dobot.PublishTargetJoint(Q(3,:));
+            pause(t);
+        end
 
         % animate robot
         self.dobot.Animate(qtotile);
         for i = 1:size(qpickedup,1)
             self.dobot.Animate(qpickedup(i,:));
             endeffector = self.dobot.Fkine(qpickedup(i,:));
-            delete(h{player2tilei});
-            h{player2tilei} = plotply('Rtile.ply',endeffector);
+            delete(h{tilei});
+            h{tilei} = plotply('Rtile.ply',endeffector);
         end
         self.dobot.Animate(qfromtile);
-%         delete(h{player2tilei});
-%         h{player2tilei} = plotply('Rtile.ply',moveloc); % plot move
-        player2tilei = player2tilei + 1;
+
+        tilei = tilei + 1;
     end
     
     self.game.PlayMove(move(1),move(2),player); % set new board
     self.game.PrintBoard();
 end
-end
-
-function tilelocs = SenseTiles()
-    tilelocs = cat(3,transl(0.2,-0.1,0),transl(0.2,0.1,0)...
-        ,transl(0.1,-0.1,0),transl(0.1,0,0),transl(0.1,0.1,0));
 end
 
 function h = PlotTiles(tilelocs)
