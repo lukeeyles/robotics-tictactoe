@@ -5,6 +5,7 @@ properties
     qlimReal = deg2rad([-135 135; -5 85; -10 95; -90 90]);
     qn = [0 pi/6 pi/3 0];
     qz = [0 0 0 0];
+    realrobot;
     
     % Subscribers
     jointStateSub;
@@ -32,15 +33,21 @@ properties
 end
 
 methods
+    J = Jacob0(self,q);
+    [qReal, error] = Ikine(self, T);
+    qReal = RMRC(self,wrench,qReal,dt);
+    
 function self = DobotMagician(realrobot)
     if nargin < 1
-        realrobot = false;
+        self.realrobot = false;
+    else
+        self.realrobot = realrobot;
     end
     % define dh parameters
     self.CreateRobot();
     
-    if realrobot
-        
+    if self.realrobot
+        self.InitialiseROS();
     end
 end
 
@@ -61,15 +68,12 @@ end
 
 function Plot(self, q)
 %     % load ply files
-%     for linkIndex = 1:self.model.n
-%         [faceData, vertexData, plyData{linkIndex}] = plyread(['Dob',num2str(linkIndex),'.ply'],'tri');
+%     for linkIndex = 1:self.model.n+1
+%         [faceData, vertexData, plyData{linkIndex}] = plyread(['Dobot',num2str(linkIndex),'.ply'],'tri');
 %         self.model.faces{linkIndex} = faceData;
 %         self.model.points{linkIndex} = vertexData;
 %     end
-%     [faceData, vertexData, plyData{self.model.n+1}] = plyread(['Dob5.ply'],'tri');
-%     self.model.faces{self.model.n+1} = faceData;
-%     self.model.points{self.model.n+1} = vertexData;
-    
+%     
     % display robot
     q = self.qRealToModel(q);
     self.model.plot(q);
@@ -112,9 +116,9 @@ function qReal = GetPos(self)
     qReal = self.qModelToReal(qModel);
 end
 
+% ROS functions from Gavin https://github.com/gapaul/dobot_magician_driver
 function InitialiseROS(self)
     % Initialise subs and pubs as object starts
-
     self.jointStateSub = rossubscriber('/dobot_magician/joint_states');
     self.endEffectorStateSub = rossubscriber('/dobot_magician/end_effector_poses');
 
@@ -131,12 +135,63 @@ function InitialiseROS(self)
     [self.toolStatePub, self.toolStateMsg] = rospublisher('/dobot_magician/target_tool_state');
     [self.safetyStatePub,self.safetyStateMsg] = rospublisher('/dobot_magician/target_safety_status');
 
-    [self.railStatusPub, self.railStatusMsg] = rospublisher('/dobot_magician/target_rail_status');
-    [self.railPosPub,self.railPosMsg] = rospublisher('/dobot_magician/target_rail_position');
-
     [self.ioDataPub,self.ioDataMsg] = rospublisher('/dobot_magician/target_io_state');
 
     [self.eMotorPub,self.eMotorMsg] = rospublisher('/dobot_magician/target_e_motor_state');
+end
+
+function PublishTargetJoint(self, jointTarget)
+   trajectoryPoint = rosmessage("trajectory_msgs/JointTrajectoryPoint");
+   trajectoryPoint.Positions = jointTarget;
+   self.targetJointTrajMsg.Points = trajectoryPoint;
+   send(self.targetJointTrajPub,self.targetJointTrajMsg);
+end
+
+function PublishEndEffectorPose(self,pose,rotation)
+   self.targetEndEffectorMsg.Position.X = pose(1);
+   self.targetEndEffectorMsg.Position.Y = pose(2);
+   self.targetEndEffectorMsg.Position.Z = pose(3);
+
+   qua = eul2quat(rotation);
+   self.targetEndEffectorMsg.Orientation.W = qua(1);
+   self.targetEndEffectorMsg.Orientation.X = qua(2);
+   self.targetEndEffectorMsg.Orientation.Y = qua(3);
+   self.targetEndEffectorMsg.Orientation.Z = qua(4);
+
+   send(self.targetEndEffectorPub,self.targetEndEffectorMsg);
+end
+
+function PublishToolState(self,state)
+    % 1 for on, 0 for off
+   self.toolStateMsg.Data = state;
+   send(self.toolStatePub,self.toolStateMsg);
+end
+
+function InitaliseRobot(self)
+    self.safetyStateMsg.Data = 2; %% Refer to the Dobot Documentation(WIP) - 2 is defined as INITIALISATION 
+    send(self.safetyStatePub,self.safetyStateMsg);
+end
+
+function EStopRobot(self)
+    self.safetyStateMsg.Data = 3; %% Refer to the Dobot Documentation(WIP) - 3 is defined as ESTOP 
+    send(self.safetyStatePub,self.safetyStateMsg);
+end
+
+function jointStates = GetCurrentJointState(self)
+    latestJointStateMsg = self.jointStateSub.LatestMessage;
+    jointStates = latestJointStateMsg.Position;
+end
+
+function [ioMux, ioData] = GetCurrentIOStatus(self)
+   latestIODataMsg = self.ioStatusSub.LatestMessage;
+   ioStatus = latestIODataMsg.Data;
+   ioMux = ioStatus(2:21);
+   ioData = ioStatus(23:42);
+end
+
+function SetIOData(self,address,ioMux,data)
+   self.ioDataMsg.Data = [address,ioMux,data];
+   send(self.ioDataPub,self.ioDataMsg);
 end
 
 end
