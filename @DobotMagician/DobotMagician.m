@@ -59,8 +59,8 @@ function CreateRobot(self)
     L(1) = Link('d',0.138,'a',0,'alpha',-pi/2,'offset',0,'qlim', [-pi/2,pi/2]);
     L(2) = Link('d',0,'a',0.135,'alpha',0,'offset',-pi/2,'qlim', [0,deg2rad(85)]);
     L(3) = Link('d',0,'a',0.147,'alpha',0,'offset',0,'qlim', deg2rad([-15,170]));
-    L(4) = Link('d',0,'a',0.041,'alpha',pi/2,'offset',-pi/2,'qlim', [-pi/2,pi/2]);
-    L(5) = Link('d',-0.05,'a',0,'alpha',0,'offset',0,'qlim', deg2rad([-85,85]));
+    L(4) = Link('d',0,'a',0.061,'alpha',pi/2,'offset',-pi/2,'qlim', [-pi/2,pi/2]);
+    L(5) = Link('d',-0.07,'a',0,'alpha',0,'offset',0,'qlim', deg2rad([-85,85]));
     
     self.model = SerialLink(L,'name',name);
     self.model.base = transl(0,0,-0.138); % same coordinate system as manual
