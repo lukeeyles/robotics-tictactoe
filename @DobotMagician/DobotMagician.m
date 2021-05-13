@@ -69,7 +69,7 @@ end
 function Plot(self, q)
 %     % load ply files
     for linkIndex = 1:self.model.n+1
-        [faceData, vertexData, plyData{linkIndex}] = plyread(['Dobot',num2str(linkIndex),'.ply'],'tri');
+        [faceData, vertexData, plyData{linkIndex}] = plyread(['Dobot',num2str(linkIndex),'m.ply'],'tri');
         self.model.faces{linkIndex} = faceData;
         self.model.points{linkIndex} = vertexData;
     end
