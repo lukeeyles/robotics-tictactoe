@@ -1,10 +1,9 @@
 function PlayGame(self,difficulty)
 self.game.Reset();
-
-% if self.realrobot
-%     self.dobot.InitaliseRobot();
-%     pause();
-% end
+if self.realrobot
+    self.dobot.InitaliseRobot();
+    pause();
+end
 
 qDefault = [0 pi/6 pi/4 0];
 self.dobot.Plot(qDefault);
@@ -19,13 +18,13 @@ hold on;
 % [boardloc,tileloc] = SenseBoardandTiles();
 
 % hardcode locations of board and tiles
-tilesize = 0.04;
+tilesize = 0.045;
 tableheight = -0.12;
 centredistance = 0.155/2;
-boardloc = transl([0.11+centredistance 0 tableheight]);
-tileloc = cat(3,transl(0.05+centredistance,-0.08,tableheight),...
-    transl(0.1+centredistance,-0.08,tableheight),transl(0.15+centredistance,-0.08,tableheight),...
-    transl(0.05+centredistance,0.08,tableheight),transl(0.1+centredistance,0.08,tableheight));
+boardloc = transl([0.12+centredistance 0 tableheight]);
+tileloc = cat(3,transl(0.08+centredistance,-0.08,tableheight),...
+    transl(0.12+centredistance,-0.08,tableheight),transl(0.16+centredistance,-0.08,tableheight),...
+    transl(0.08+centredistance,0.08,tableheight),transl(0.12+centredistance,0.08,tableheight));
 
 % generate locations for all board squares
 boardsquares = zeros(4,4,3,3);
@@ -41,7 +40,8 @@ pickupT = transl(0,0,0);
 % robot is player 2, human is player 1
 tilei = 1;
 h = PlotTiles(tileloc);
-player = randi(2);
+%player = randi(2);
+player = 1;
 
 while self.game.CheckWin < 0
     player = TicTacToe.InvertPlayer(player);
@@ -73,11 +73,15 @@ while self.game.CheckWin < 0
         moveloc = boardsquares(:,:,move(1),move(2));
         
         % find poses to pick up and place down tile
-        steps = 20;
+        steps = 5;
         Q(1,:) = qDefault; % start at qn
+        qabovepickup = self.dobot.Ikine(transl(0,0,0.015)*tileloc(:,:,tilei)*pickupT); % above tile
         [Q(2,:),error1] = self.dobot.Ikine(tileloc(:,:,tilei)*pickupT); % go to tile
+        % above again
         Q(3,:) = qDefault; % move back to qn
+        qabovedropoff = self.dobot.Ikine(transl(0,0,0.01)*moveloc*pickupT); % above dropoff
         [Q(4,:),error2] = self.dobot.Ikine(moveloc*pickupT); % place down tile
+         % above dropoff
         error2
         Q(5,:) = qDefault; % back to qn
         qtotile = jtraj(Q(1,:),Q(2,:),steps);
@@ -87,18 +91,26 @@ while self.game.CheckWin < 0
         % move real robot
         if self.realrobot
             t = 1;
-            self.dobot.PublishTargetJoint(Q(1,:));
+            self.dobot.PublishTargetJoint(Q(1,:)); % qn
             pause(t);
-            self.dobot.PublishTargetJoint(Q(2,:));
+            self.dobot.PublishTargetJoint(qabovepickup);
             pause(t);
-            self.dobot.PublishToolState(1);
+            self.dobot.PublishTargetJoint(Q(2,:)); % at tile
+            pause(t);
+            self.dobot.PublishToolState(1); % suction on
             pause(0.5);
-            self.dobot.PublishTargetJoint(Q(3,:));
+            self.dobot.PublishTargetJoint(qabovepickup); % lift up
+            pause(t);
+            self.dobot.PublishTargetJoint(Q(3,:)); % qn
             pause(t+0.5);
-            self.dobot.PublishTargetJoint(Q(4,:));
+            self.dobot.PublishTargetJoint(qabovedropoff); % above place
+            pause(t);
+            self.dobot.PublishTargetJoint(Q(4,:)); % place down
             pause(t);
             self.dobot.PublishToolState(0);
             pause(0.5);
+            self.dobot.PublishTargetJoint(qabovedropoff); % above place
+            pause(t);
             self.dobot.PublishTargetJoint(Q(3,:));
             pause(t);
         end
