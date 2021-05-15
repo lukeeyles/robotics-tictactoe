@@ -1,10 +1,13 @@
 function PlayGame(self,difficulty)
 self.game.Reset();
+try
+    close(1);
+end
+figure(1);
 if self.realrobot
     self.dobot.InitaliseRobot();
     pause();
 end
-hold on;
 self.cammodel.plot_camera();
 hold on;
 
@@ -29,9 +32,8 @@ pickupT = transl(0,0,0);
 % robot is player 2, human is player 1
 tilei = 1;
 h = PlotTiles(tileloc);
-%player = randi(2);
-player = 2;
-pause();
+player = randi(2);
+%player = 2;
 while self.game.CheckWin < 0
     player = TicTacToe.InvertPlayer(player);
     fprintf("Player %d turn\n", player);
