@@ -1,7 +1,7 @@
 classdef DobotMagician < handle
 properties
     model;
-    workspace = [-1 1 -1 1 -0.1 1];
+    workspace;
     qlimReal = deg2rad([-135 135; -5 85; -10 95; -90 90]);
     qn = [0 pi/6 pi/3 0];
     qz = [0 0 0 0];
@@ -62,6 +62,7 @@ function CreateRobot(self)
     L(4) = Link('d',0,'a',0.061,'alpha',pi/2,'offset',-pi/2,'qlim', [-pi/2,pi/2]);
     L(5) = Link('d',-0.07,'a',0,'alpha',0,'offset',0,'qlim', deg2rad([-85,85]));
     
+    self.workspace = [-0.5 0.5 -0.5 0.5 -0.138 0.5];
     self.model = SerialLink(L,'name',name);
     self.model.base = transl(0,0,-0.138); % same coordinate system as manual
 end
