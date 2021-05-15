@@ -144,9 +144,9 @@ function PrintBoard(self)
     for row = 1:size(self.board,1)
         for col = 1:size(self.board,2)
             if self.board(row,col) == 1
-                fprintf(" X ");
+                fprintf(" B ");
             elseif self.board(row,col) == 2
-                fprintf(" O ");
+                fprintf(" R ");
             else
                 fprintf("   ");
             end
@@ -158,6 +158,7 @@ function PrintBoard(self)
             fprintf("\n-----------\n");
         end
     end
+    fprintf("\n");
 end
 
 end
