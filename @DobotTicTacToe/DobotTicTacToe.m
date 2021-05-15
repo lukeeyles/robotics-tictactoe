@@ -44,7 +44,11 @@ function self = DobotTicTacToe(realrobot)
         end
     end
     
-    self.cameraT = transl(0.12+self.centredistance,0,0.13)*troty(pi)*trotz(-pi/2);
+    heightoffset = self.dobot.model.base(3,4);
+    %self.cameraT = transl(0.12+self.centredistance,0,0.27-0.138)*troty(pi)*trotz(-pi/2);
+    self.cameraT = transl(0.06+self.centredistance,0,0.1+heightoffset)*troty(pi)*trotz(-pi/2)*trotx(pi/6);
+%     self.cammodel = CentralCamera('focal', 483, 'pixel', 1, ...
+%     'resolution', [640 480], 'centre', [315 298], 'name', 'mycamera');
     self.cammodel = CentralCamera('focal', 483, 'pixel', 1, ...
     'resolution', [640 480], 'centre', [315 298], 'name', 'mycamera');
     self.cammodel.T = self.cameraT;
@@ -94,16 +98,18 @@ function image = TakeImage(self)
 end
 
 function TestCamera(self)
-    timeout = 10;
+    timeout = 30;
     tic;
+    figure(2);
+    tilepixels = self.ProjectCamera(self.boardsquares);
+    
     while toc < timeout
         I = snapshot(self.cam);
-        tilepixels = self.ProjectCamera(self.boardsquares)
         imshow(I)
         hold on;
-        for i = 1:size(tilepixels,1)
-            plot(tilepixels(i,1),tilepixels(i,2),'r*')
-        end
+        plot(tilepixels(:,1),tilepixels(:,2),'r*')
+        drawnow();
+        pause(0.1);
     end
 end
 
