@@ -6,6 +6,7 @@ properties
     cam; % webcam
     cammodel;
     realrobot;
+    realcamera = true;
     calibrationMatrix = [481.8517 0 315.3629;
         0 484.7421 297.6908;
         0 0 1.0000];
@@ -29,6 +30,7 @@ function self = DobotTicTacToe(realrobot)
     try
         self.cam = webcam(2);
     catch e
+        self.realcamera = false;
         disp("Camera not found");
     end
     

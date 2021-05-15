@@ -4,35 +4,24 @@ if self.realrobot
     self.dobot.InitaliseRobot();
     pause();
 end
+hold on;
+self.cammodel.plot_camera();
+hold on;
 
-qDefault = [0 pi/6 pi/4 0];
+qDefault = [0 0.4363 1.2770 0];
 self.dobot.Plot(qDefault);
 
 if self.realrobot
     self.dobot.PublishTargetJoint(qDefault)
 end
 
-hold on;
-
 % % use webcam to sense board + tile positions
 % [boardloc,tileloc] = SenseBoardandTiles();
 
-% hardcode locations of board and tiles
-tilesize = 0.045;
-tableheight = -0.12;
-centredistance = 0.155/2;
-boardloc = transl([0.12+centredistance 0 tableheight]);
-tileloc = cat(3,transl(0.08+centredistance,-0.08,tableheight),...
-    transl(0.12+centredistance,-0.08,tableheight),transl(0.16+centredistance,-0.08,tableheight),...
-    transl(0.08+centredistance,0.08,tableheight),transl(0.12+centredistance,0.08,tableheight));
-
-% generate locations for all board squares
-boardsquares = zeros(4,4,3,3);
-for row = 1:3
-    for col = 1:3
-        boardsquares(:,:,row,col) = boardloc*transl([(row-2)*tilesize (col-2)*tilesize 0]);
-    end
-end
+% hardcode start locations of board and tiles
+tileloc = cat(3,transl(0.08+self.centredistance,-0.08,self.tableheight),...
+    transl(0.12+self.centredistance,-0.08,self.tableheight),transl(0.16+self.centredistance,-0.08,self.tableheight),...
+    transl(0.08+self.centredistance,0.08,self.tableheight),transl(0.12+self.centredistance,0.08,self.tableheight));
 
 % define pickup transform to pick up tiles
 pickupT = transl(0,0,0);
@@ -41,44 +30,53 @@ pickupT = transl(0,0,0);
 tilei = 1;
 h = PlotTiles(tileloc);
 %player = randi(2);
-player = 1;
-
+player = 2;
+pause();
 while self.game.CheckWin < 0
     player = TicTacToe.InvertPlayer(player);
     fprintf("Player %d turn\n", player);
     
     if player == 1 % human
-%         while (self.SenseBoardState() == self.game.board)
-%             % wait for board state to change
-%         end
-%         
-%         while self.SenseObstruction()
-%             % wait for any obstructions to clear
-%         end
-%         
-%         % get player move
-%         move = self.FindPlayerMove();
+        if self.realcamera
+            reference = snapshot(self.cam);
+            disp("Waiting for player to move");
+            current = snapshot(self.cam);
+            newboard = self.SenseBoardState();
+            while ~self.CheckValidMove(newboard,player)...
+                    || self.SenseObstruction(current, reference, 0.05)
+                % wait for a valid move to be made
+                % wait for any obstructions to clear
+                pause(1);
+                newboard = self.SenseBoardState();
+                current = snapshot(self.cam);
+            end
+            disp("Player has moved");
 
-        % get move through keyboard input
-        move = self.game.GetPlayerMove();
+            % get player move
+            move = self.FindPlayerMove(newboard);
+        else
+            % get move through keyboard input
+            move = self.game.GetPlayerMove();
+        end
         
         % find physical location of move to plot
-        moveloc = boardsquares(:,:,move(1),move(2));
+        moveloc = self.boardsquares(:,:,move(1),move(2));
         plotply('Btile.ply',moveloc);
+        
     else % robot
         % calculate robot move
         move = self.game.CalculateMove(2,difficulty);
  
         % find location of move
-        moveloc = boardsquares(:,:,move(1),move(2));
+        moveloc = self.boardsquares(:,:,move(1),move(2));
         
         % find poses to pick up and place down tile
-        steps = 5;
+        steps = 20;
         Q(1,:) = qDefault; % start at qn
         qabovepickup = self.dobot.Ikine(transl(0,0,0.015)*tileloc(:,:,tilei)*pickupT); % above tile
         [Q(2,:),error1] = self.dobot.Ikine(tileloc(:,:,tilei)*pickupT); % go to tile
         % above again
-        Q(3,:) = qDefault; % move back to qn
+        Q(3,:) = self.dobot.qn; % move back to qn
         qabovedropoff = self.dobot.Ikine(transl(0,0,0.01)*moveloc*pickupT); % above dropoff
         [Q(4,:),error2] = self.dobot.Ikine(moveloc*pickupT); % place down tile
          % above dropoff
@@ -130,7 +128,23 @@ while self.game.CheckWin < 0
     
     self.game.PlayMove(move(1),move(2),player); % set new board
     self.game.PrintBoard();
+    
+    if player == 2 && self.realrobot == false && self.realcamera == true
+        disp("Waiting for human to place tile for robot");
+        pause(); % wait for human to place tile in right postion...
+    end
 end
+
+% game end
+winner = self.game.CheckWin();
+if winner == 1
+    disp("You won!");
+elseif winner == 2
+    disp("Robot won!");
+else
+    disp("Draw!");
+end
+
 end
 
 function h = PlotTiles(tilelocs)
