@@ -225,6 +225,5 @@ function qReal = qModelToReal(qModel)
     qReal = qModel([1:3 5]);
     qReal(:,3) = qModel(:,3) - pi/2 + qModel(:,2);
 end
-
 end
 end
