@@ -5,6 +5,7 @@
 % transforms - list of transforms
 function [ transforms ] = GetLinkPoses( q, dobot)
 
+q = dobot.qRealToModel(q);
 links = dobot.model.links;
 transforms = zeros(4, 4, length(links) + 1);
 transforms(:,:,1) = dobot.model.base;
