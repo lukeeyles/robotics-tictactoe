@@ -22,7 +22,8 @@ properties
     player; % current player
 %     tileloc;
     tilei;
-    tiles;
+    rtiles;
+    btiles;
 end
 
 methods
@@ -82,8 +83,8 @@ function AnimateWithTile(self, q, tilei)
         qfinal = self.dobot.Animate(q(i,:));
         % plot with the tile
         endeffector = self.dobot.Fkine(self.dobot.GetPos());
-        self.tiles(tilei).T = endeffector;
-        self.tiles(tilei).Plot();
+        self.rtiles(tilei).T = endeffector;
+        self.rtiles(tilei).Plot();
 %         self.tileloc(:,:,tilei) = endeffector;
         %delete(tilehandle);
 %         tilehandle
@@ -139,7 +140,13 @@ function Reset(self)
     self.player = randi(2);
     % hardcode start locations of tiles
     f = 'Rtile.ply';
-    self.tiles = [GameTile(f,transl(0.08+self.centredistance,-0.08,self.tableheight)),...
+    for i = 1:numel(self.rtiles)
+        delete(self.rtiles(i).h);
+    end
+    for i = 1:numel(self.btiles)
+        delete(self.btiles(i).h);
+    end
+    self.rtiles = [GameTile(f,transl(0.08+self.centredistance,-0.08,self.tableheight)),...
         GameTile(f,transl(0.12+self.centredistance,-0.08,self.tableheight)),...
         GameTile(f,transl(0.16+self.centredistance,-0.08,self.tableheight)),...
         GameTile(f,transl(0.08+self.centredistance,0.08,self.tableheight)),...
