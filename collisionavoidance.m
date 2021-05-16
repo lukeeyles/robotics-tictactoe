@@ -46,8 +46,11 @@ q2(1,5) = 0; %adding a zero so Indexing works
 
 %Load obstacle
 %Cube
-centerpnt = [0.2,0.09,-0.09];
-side = 0.05;
+cx = 0.2;
+cy = 0.09;
+cz = -0.09;
+centerpnt = [cx,cy,cz];
+side = 0.02;
 plotOptions.plotFaces = true;
 [vertex,faces,faceNormals] = RectangularPrism(centerpnt-side/2, centerpnt+side/2,plotOptions);
 
@@ -61,16 +64,16 @@ for i = 1 : dobot.model.n
 end
 
 %  Go through each link and also each triangle face
-for i = 1 : size(tr,3)-1    
-    for faceIndex = 1:size(faces,1)
-        vertOnPlane = vertex(faces(faceIndex,1)',:);
-        [intersectP,check] = LinePlaneIntersection(faceNormals(faceIndex,:),vertOnPlane,tr(1:3,4,i)',tr(1:3,4,i+1)'); 
-        if check == 1 && IsIntersectionPointInsideTriangle(intersectP,vertex(faces(faceIndex,:)',:))
-            plot3(intersectP(1),intersectP(2),intersectP(3),'g*');
-            display('Intersection');
-        end
-    end    
-end
+% for i = 1 : size(tr,3)-1    
+%     for faceIndex = 1:size(faces,1)
+%         vertOnPlane = vertex(faces(faceIndex,1)',:);
+%         [intersectP,check] = LinePlaneIntersection(faceNormals(faceIndex,:),vertOnPlane,tr(1:3,4,i)',tr(1:3,4,i+1)'); 
+%         if check == 1 && IsIntersectionPointInsideTriangle(intersectP,vertex(faces(faceIndex,:)',:))
+%             plot3(intersectP(1),intersectP(2),intersectP(3),'g*');
+%             display('Intersection');
+%         end
+%     end    
+% end
 
 %  Go through until there are no step sizes larger than 1 degree
 % q1 = [0 0 0 0 0];
@@ -98,19 +101,21 @@ end
 
 %Method 1 try
 
-% dobot.Animate(q1);
-% q1 = [0 pi/6 pi/3 0 0]
-qWaypoints = [q1 ...
+dobot.Animate(q1);
+q1 = [0 pi/6 pi/3 0 0];
+
+qWaypoints = [q1; dobot.Ikine(transl(0.03+cx,cy-0.03,0.07+cz)),0 ;...
+                dobot.Ikine(transl(0.03+cx,cy+0.03,0.07+cz)),0; q2];
 %     ; 0,deg2rad([-111,-72]) ...
 %     ; deg2rad([169,-111,-72]) ...
-    ; q2];
+%     ; q2];
 qMatrix = InterpolateWaypointRadians(qWaypoints,deg2rad(5));
 if IsCollision(dobot,qMatrix,faces,vertex,faceNormals)
     error('Collision detected!!');
 else
     display('No collision found');
 end
-robot.animate(qMatrix);
+dobot.Animate(qMatrix);
 
 %Method 2 Try
 
