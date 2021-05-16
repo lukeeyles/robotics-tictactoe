@@ -143,24 +143,36 @@ function InitialiseROS(self)
 end
 
 function PublishTargetJoint(self, jointTarget)
-   trajectoryPoint = rosmessage("trajectory_msgs/JointTrajectoryPoint");
-   trajectoryPoint.Positions = jointTarget;
-   self.targetJointTrajMsg.Points = trajectoryPoint;
-   send(self.targetJointTrajPub,self.targetJointTrajMsg);
+    trajectoryPoint = rosmessage("trajectory_msgs/JointTrajectoryPoint");
+    trajectoryPoint.Positions = jointTarget;
+    self.targetJointTrajMsg.Points = trajectoryPoint;
+    send(self.targetJointTrajPub,self.targetJointTrajMsg);
+
+    % wait for joints to finish updating before returning
+    timeout = 5;
+    tolerance = deg2rad(0.5);
+    tic
+    while toc < timeout
+        jointStates = GetCurrentJointState(self);
+        if approxequals(jointStates,jointTarget,tolerance)
+            disp("Reached target joint state");
+            break            
+        end
+    end
 end
 
 function PublishEndEffectorPose(self,pose,rotation)
-   self.targetEndEffectorMsg.Position.X = pose(1);
-   self.targetEndEffectorMsg.Position.Y = pose(2);
-   self.targetEndEffectorMsg.Position.Z = pose(3);
+    self.targetEndEffectorMsg.Position.X = pose(1);
+    self.targetEndEffectorMsg.Position.Y = pose(2);
+    self.targetEndEffectorMsg.Position.Z = pose(3);
 
-   qua = eul2quat(rotation);
-   self.targetEndEffectorMsg.Orientation.W = qua(1);
-   self.targetEndEffectorMsg.Orientation.X = qua(2);
-   self.targetEndEffectorMsg.Orientation.Y = qua(3);
-   self.targetEndEffectorMsg.Orientation.Z = qua(4);
+    qua = eul2quat(rotation);
+    self.targetEndEffectorMsg.Orientation.W = qua(1);
+    self.targetEndEffectorMsg.Orientation.X = qua(2);
+    self.targetEndEffectorMsg.Orientation.Y = qua(3);
+    self.targetEndEffectorMsg.Orientation.Z = qua(4);
 
-   send(self.targetEndEffectorPub,self.targetEndEffectorMsg);
+    send(self.targetEndEffectorPub,self.targetEndEffectorMsg);
 end
 
 function PublishToolState(self,state)
@@ -185,15 +197,15 @@ function jointStates = GetCurrentJointState(self)
 end
 
 function [ioMux, ioData] = GetCurrentIOStatus(self)
-   latestIODataMsg = self.ioStatusSub.LatestMessage;
-   ioStatus = latestIODataMsg.Data;
-   ioMux = ioStatus(2:21);
-   ioData = ioStatus(23:42);
+    latestIODataMsg = self.ioStatusSub.LatestMessage;
+    ioStatus = latestIODataMsg.Data;
+    ioMux = ioStatus(2:21);
+    ioData = ioStatus(23:42);
 end
 
 function SetIOData(self,address,ioMux,data)
-   self.ioDataMsg.Data = [address,ioMux,data];
-   send(self.ioDataPub,self.ioDataMsg);
+    self.ioDataMsg.Data = [address,ioMux,data];
+    send(self.ioDataPub,self.ioDataMsg);
 end
 
 end
