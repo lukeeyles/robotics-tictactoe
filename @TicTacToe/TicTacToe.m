@@ -136,6 +136,18 @@ function move = GetPlayerMove(self)
     end
 end
 
+function valid = CheckValidMove(self,move)
+    % check if move is valid
+    valid = false;
+    if any(move > 3) || any(move < 1)
+        disp("Out of range");
+    elseif self.board(move(1),move(2)) ~= 0
+        disp("Already occupied");
+    else
+        valid = true;
+    end
+end
+
 function Reset(self)
     self.board = zeros(3);
 end
