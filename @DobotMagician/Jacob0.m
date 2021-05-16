@@ -1,9 +1,9 @@
-function J = Jacob0(self,q)
+function JModel = Jacob0(self,qReal)
 % returns seriallink model jacobian for first 3 links of model
-qmodel = self.qRealToModel(q);
-qmodel = qmodel(1:3);
+qModel = self.qRealToModel(qReal);
+qModel = qModel(1:3);
 
 % take only first 3 links of robot
 r = SerialLink(self.model.links(1:3));
-J = r.jacob0(qmodel);
-J = J(1:3,1:3);
+JModel = r.jacob0(qModel);
+JModel = JModel(1:3,1:3);
