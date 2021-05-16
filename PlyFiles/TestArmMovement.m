@@ -11,7 +11,6 @@ blueTile1 = transl(0.05,0.15,0);
 % these are poses to go to inbetween 
 % as a safety thing to avoid books
 
-
 % Finishing pose
 % how do I know where to put?
 % is this a sense thing? or a hard code thing?
