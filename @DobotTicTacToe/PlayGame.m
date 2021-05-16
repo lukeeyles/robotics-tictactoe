@@ -1,9 +1,24 @@
-function PlayGame(self,difficulty)
-self.game.Reset();
-try
-    close(1);
+function result = PlayGame(self,difficulty,resume)
+if ~exist('difficulty','var')
+    difficulty = 1;
 end
-figure(1);
+if ~exist('resume','var')
+    resume = false; % assume we want to reset instead of resuming
+end
+
+qDefault = [0 0.4363 1.2770 0];
+if ~resume
+    self.Reset();
+    try
+        close(1);
+    end
+    figure(1);
+    self.dobot.Plot(qDefault);
+else
+    self.dobot.Animate(self.dobot.GetPos());
+    self.player = TicTacToe.InvertPlayer(self.player); % double invert to resume with the same player
+end
+
 if self.realrobot
     self.dobot.InitaliseRobot();
     pause();
@@ -11,40 +26,30 @@ end
 self.cammodel.plot_camera();
 hold on;
 
-qDefault = [0 0.4363 1.2770 0];
-self.dobot.Plot(qDefault);
-
 if self.realrobot
     self.dobot.PublishTargetJoint(qDefault)
 end
-
-% % use webcam to sense board + tile positions
-% [boardloc,tileloc] = SenseBoardandTiles();
-
-% hardcode start locations of board and tiles
-tileloc = cat(3,transl(0.08+self.centredistance,-0.08,self.tableheight),...
-    transl(0.12+self.centredistance,-0.08,self.tableheight),transl(0.16+self.centredistance,-0.08,self.tableheight),...
-    transl(0.08+self.centredistance,0.08,self.tableheight),transl(0.12+self.centredistance,0.08,self.tableheight));
 
 % define pickup transform to pick up tiles
 pickupT = transl(0,0,0);
 
 % robot is player 2, human is player 1
-tilei = 1;
-h = PlotTiles(tileloc);
-player = randi(2);
-%player = 2;
+%h = PlotTiles(self.tileloc);
+for i = 1:numel(self.tiles)
+    self.tiles(i).Plot();
+end
+
 while self.game.CheckWin < 0
-    player = TicTacToe.InvertPlayer(player);
-    fprintf("Player %d turn\n", player);
+    self.player = TicTacToe.InvertPlayer(self.player);
+    fprintf("Player %d turn\n", self.player);
     
-    if player == 1 % human
+    if self.player == 1 % human
         if self.realcamera
             reference = snapshot(self.cam);
             disp("Waiting for player to move");
             current = snapshot(self.cam);
             newboard = self.SenseBoardState();
-            while ~self.CheckValidMove(newboard,player)...
+            while ~self.CheckValidMove(newboard,self.player)...
                     || self.SenseObstruction(current, reference, 0.05)
                 % wait for a valid move to be made
                 % wait for any obstructions to clear
@@ -57,13 +62,18 @@ while self.game.CheckWin < 0
             % get player move
             move = self.FindPlayerMove(newboard);
         else
-            % get move through keyboard input
-            move = self.game.GetPlayerMove();
+            while isempty(self.move) || ~self.game.CheckValidMove(self.move)
+                % wait for gui to send valid move
+                pause(0.1);
+            end
+            move = self.move;
+            move
         end
         
         % find physical location of move to plot
         moveloc = self.boardsquares(:,:,move(1),move(2));
         plotply('Btile.ply',moveloc);
+        self.move = [];
         
     else % robot
         % calculate robot move
@@ -73,10 +83,10 @@ while self.game.CheckWin < 0
         moveloc = self.boardsquares(:,:,move(1),move(2));
         
         % find poses to pick up and place down tile
-        steps = 20;
-        Q(1,:) = qDefault; % start at qn
-        qabovepickup = self.dobot.Ikine(transl(0,0,0.015)*tileloc(:,:,tilei)*pickupT); % above tile
-        [Q(2,:),error1] = self.dobot.Ikine(tileloc(:,:,tilei)*pickupT); % go to tile
+        steps = 100;
+        Q(1,:) = self.dobot.GetPos();
+        qabovepickup = self.dobot.Ikine(transl(0,0,0.015)*self.tiles(self.tilei).T*pickupT); % above tile
+        [Q(2,:),error1] = self.dobot.Ikine(self.tiles(self.tilei).T*pickupT); % go to tile
         % above again
         Q(3,:) = self.dobot.qn; % move back to qn
         qabovedropoff = self.dobot.Ikine(transl(0,0,0.01)*moveloc*pickupT); % above dropoff
@@ -117,21 +127,21 @@ while self.game.CheckWin < 0
 
         % animate robot
         self.dobot.Animate(qtotile);
-        for i = 1:size(qpickedup,1)
-            self.dobot.Animate(qpickedup(i,:));
-            endeffector = self.dobot.Fkine(qpickedup(i,:));
-            delete(h{tilei});
-            h{tilei} = plotply('Rtile.ply',endeffector);
-        end
+        self.AnimateWithTile(qpickedup,self.tilei);
         self.dobot.Animate(qfromtile);
-
-        tilei = tilei + 1;
+        if ~self.dobot.estop
+            self.tilei = self.tilei + 1;
+        end
     end
     
-    self.game.PlayMove(move(1),move(2),player); % set new board
+    if self.dobot.estop
+        return;
+    end
+    
+    self.game.PlayMove(move(1),move(2),self.player); % set new board
     self.game.PrintBoard();
     
-    if player == 2 && self.realrobot == false && self.realcamera == true
+    if self.player == 2 && self.realrobot == false && self.realcamera == true
         disp("Waiting for human to place tile for robot");
         pause(); % wait for human to place tile in right postion...
     end

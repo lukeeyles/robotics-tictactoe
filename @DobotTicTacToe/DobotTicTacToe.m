@@ -16,6 +16,13 @@ properties
     boardloc;
     boardsquares; % location of all squares on board relative to centre of robot
     tilesize = 0.045; % size of playing pieces
+    
+    % gameplay parameters
+    move = []; % set by gui for player's move
+    player; % current player
+%     tileloc;
+    tilei;
+    tiles;
 end
 
 methods
@@ -45,10 +52,8 @@ function self = DobotTicTacToe(realrobot)
     end
     
     heightoffset = self.dobot.model.base(3,4);
-    %self.cameraT = transl(0.12+self.centredistance,0,0.27-0.138)*troty(pi)*trotz(-pi/2);
-    self.cameraT = transl(0.06+self.centredistance,0,0.1+heightoffset)*troty(pi)*trotz(-pi/2)*trotx(pi/6);
-%     self.cammodel = CentralCamera('focal', 483, 'pixel', 1, ...
-%     'resolution', [640 480], 'centre', [315 298], 'name', 'mycamera');
+    self.cameraT = transl(0.12+self.centredistance,0,0.27+heightoffset)*troty(pi)*trotz(-pi/2);
+    %self.cameraT = transl(0.06+self.centredistance,0,0.1+heightoffset)*troty(pi)*trotz(-pi/2)*trotx(pi/6);
     self.cammodel = CentralCamera('focal', 483, 'pixel', 1, ...
     'resolution', [640 480], 'centre', [315 298], 'name', 'mycamera');
     self.cammodel.T = self.cameraT;
@@ -69,6 +74,20 @@ function obstruction = SenseObstruction(self,currentimage,referenceimage,error)
         obstruction = true;
     else
         obstruction = false;
+    end
+end
+
+function AnimateWithTile(self, q, tilei)
+    for i = 1:size(q,1)
+        qfinal = self.dobot.Animate(q(i,:));
+        % plot with the tile
+        endeffector = self.dobot.Fkine(self.dobot.GetPos());
+        self.tiles(tilei).T = endeffector;
+        self.tiles(tilei).Plot();
+%         self.tileloc(:,:,tilei) = endeffector;
+        %delete(tilehandle);
+%         tilehandle
+%         tilehandle = plotply(tilefile,endeffector);
     end
 end
 
@@ -111,6 +130,24 @@ function TestCamera(self)
         drawnow();
         pause(0.1);
     end
+end
+
+function Reset(self)
+    % reset all parameters related to gameplay
+    self.game.Reset();
+    self.move = [];
+    self.player = randi(2);
+    % hardcode start locations of tiles
+    f = 'Rtile.ply';
+    self.tiles = [GameTile(f,transl(0.08+self.centredistance,-0.08,self.tableheight)),...
+        GameTile(f,transl(0.12+self.centredistance,-0.08,self.tableheight)),...
+        GameTile(f,transl(0.16+self.centredistance,-0.08,self.tableheight)),...
+        GameTile(f,transl(0.08+self.centredistance,0.08,self.tableheight)),...
+        GameTile(f,transl(0.12+self.centredistance,0.08,self.tableheight))];
+%     self.tiles = cat(3,transl(0.08+self.centredistance,-0.08,self.tableheight),...
+%         transl(0.12+self.centredistance,-0.08,self.tableheight),transl(0.16+self.centredistance,-0.08,self.tableheight),...
+%         transl(0.08+self.centredistance,0.08,self.tableheight),transl(0.12+self.centredistance,0.08,self.tableheight));
+    self.tilei = 1;
 end
 
 end
