@@ -214,7 +214,7 @@ end
 
 function jointStates = GetCurrentJointState(self)
     latestJointStateMsg = self.jointStateSub.LatestMessage;
-    jointStates = latestJointStateMsg.Position;
+    jointStates = latestJointStateMsg.Position';
 end
 
 function [ioMux, ioData] = GetCurrentIOStatus(self)
