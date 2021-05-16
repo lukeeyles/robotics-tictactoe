@@ -7,6 +7,9 @@ properties
     qz = [0 0 0 0];
     realrobot;
     
+    % estop
+    estop = false;
+    
     % Subscribers
     jointStateSub;
     endEffectorStateSub;
@@ -100,12 +103,17 @@ function Plot(self, q)
     end
 end
 
-function Animate(self, q)
+function qfinal = Animate(self, q)
     for i = 1:size(q,1)
+        if self.estop
+            qfinal = q(i,:);
+            return;
+        end
         qmodel = self.qRealToModel(q(i,:));
         self.model.animate(qmodel);
         drawnow;
     end
+    qfinal = q(end,:);
 end
 
 function T = Fkine(self, q)
@@ -114,8 +122,13 @@ function T = Fkine(self, q)
 end
 
 function qReal = GetPos(self)
-    qModel = self.model.getpos();
-    qReal = self.qModelToReal(qModel);
+    % get q from real robot if possible
+    if self.realrobot
+        qReal = GetCurrentJointState(self);
+    else
+        qModel = self.model.getpos();
+        qReal = self.qModelToReal(qModel);
+    end
 end
 
 % ROS functions from Gavin https://github.com/gapaul/dobot_magician_driver
@@ -187,8 +200,16 @@ function InitaliseRobot(self)
 end
 
 function EStopRobot(self)
-    self.safetyStateMsg.Data = 3; %% Refer to the Dobot Documentation(WIP) - 3 is defined as ESTOP 
-    send(self.safetyStatePub,self.safetyStateMsg);
+    self.estop = true;
+    if self.realrobot
+        self.safetyStateMsg.Data = 3; %% Refer to the Dobot Documentation(WIP) - 3 is defined as ESTOP 
+        send(self.safetyStatePub,self.safetyStateMsg);
+    end
+end
+
+function ReleaseEStop(self)
+    self.estop = false;
+    disp("EStop released");
 end
 
 function jointStates = GetCurrentJointState(self)
