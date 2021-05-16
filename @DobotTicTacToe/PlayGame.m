@@ -7,18 +7,13 @@ if ~exist('resume','var')
     resume = false; % assume we want to reset instead of resuming
 end
 
-qDefault = [0 0.4363 1.2770 0];
+qDefault = [0 0.5 0.8 0];
 if ~resume
     self.Reset();
     %self.dobot.Animate(qDefault);
 else
     %self.dobot.Animate(self.dobot.GetPos());
     self.player = TicTacToe.InvertPlayer(self.player); % double invert to resume with the same player
-end
-
-if self.realrobot
-    self.dobot.InitaliseRobot();
-    pause();
 end
 
 hold on;
@@ -83,11 +78,11 @@ while self.game.CheckWin < 0
         % find poses to pick up and place down tile
         steps = 20;
         Q(1,:) = self.dobot.GetPos();
-        qabovepickup = self.dobot.Ikine(transl(0,0,0.015)*self.rtiles(self.tilei).T*pickupT); % above tile
+        qabovepickup = self.dobot.Ikine(transl(0,0,0.02)*self.rtiles(self.tilei).T*pickupT); % above tile
         [Q(2,:),error1] = self.dobot.Ikine(self.rtiles(self.tilei).T*pickupT); % go to tile
         % above again
-        Q(3,:) = self.dobot.qn; % move back to qn
-        qabovedropoff = self.dobot.Ikine(transl(0,0,0.01)*moveloc*pickupT); % above dropoff
+        Q(3,:) = qDefault; % move back to qn
+        qabovedropoff = self.dobot.Ikine(transl(0,0,0.02)*moveloc*pickupT); % above dropoff
         [Q(4,:),error2] = self.dobot.Ikine(moveloc*pickupT); % place down tile
          % above dropoff
         error2
@@ -98,29 +93,20 @@ while self.game.CheckWin < 0
         
         % move real robot
         if self.realrobot
-            t = 1;
             self.dobot.PublishTargetJoint(Q(1,:)); % qn
-            pause(t);
             self.dobot.PublishTargetJoint(qabovepickup);
-            pause(t);
             self.dobot.PublishTargetJoint(Q(2,:)); % at tile
-            pause(t);
+            pause(0.5);
             self.dobot.PublishToolState(1); % suction on
             pause(0.5);
             self.dobot.PublishTargetJoint(qabovepickup); % lift up
-            pause(t);
             self.dobot.PublishTargetJoint(Q(3,:)); % qn
-            pause(t+0.5);
             self.dobot.PublishTargetJoint(qabovedropoff); % above place
-            pause(t);
             self.dobot.PublishTargetJoint(Q(4,:)); % place down
-            pause(t);
             self.dobot.PublishToolState(0);
             pause(0.5);
             self.dobot.PublishTargetJoint(qabovedropoff); % above place
-            pause(t);
             self.dobot.PublishTargetJoint(Q(3,:));
-            pause(t);
         end
 
         % animate robot
