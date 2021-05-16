@@ -27,7 +27,7 @@ result = IsCollision(dobot,qMatrix,faces,vertex,faceNormals,false);
 
 %Avoidance
 if any(result)
-    display('Start Avoidance');
+    disp('Start Avoidance');
 %     qWaypoints = [q1; dobot.Ikine(transl(0.03+cx,cy-0.03,0.07+cz)),0 ;...
 %                 dobot.Ikine(transl(0.03+cx,cy+0.03,0.07+cz)),0; q2];
     qWaypoints = [q1; dobot.Ikine(transl(0.23, 0.06,0.07)) ;...
@@ -36,20 +36,17 @@ if any(result)
     qMatrix = InterpolateWaypointRadians(qWaypoints,deg2rad(5));
 
     if IsCollision(dobot,qMatrix,faces,vertex,faceNormals)
-    error('Collision detected!!');
+        disp('Collision detected!!');
+        qWaypoints = [];
+        return
     else
-    display('No collision met');
-    qWaypoints;
-    return
+        disp('Collision avoided');
+        return
     end  
     
 else
-    display('No collision found');
-    qWaypoints;
+    disp('No collision found');
     return
-    
 end
-
-
 
 end
