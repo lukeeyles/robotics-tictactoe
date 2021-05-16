@@ -64,7 +64,6 @@ while self.game.CheckWin < 0
                 pause(0.1);
             end
             move = self.move;
-            move
         end
         
         % find physical location of move to plot
