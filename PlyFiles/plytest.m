@@ -41,11 +41,21 @@ name = ['Dobot-',datestr(now,'yyyymmddTHHMMSSFFF')];
     L(5) = Link('d',-0.07,'a',0,'alpha',0,'offset',0,'qlim', deg2rad([-85,85]));
     
     r = SerialLink(L,'name',name);
-
+r.base = transl(0,0,-0.138);
 qn = [0 0 0 0 0];
 qz = [0 pi/6 pi/3 0 0];
-r.plot(qn);
-r.teach;
+r.plot(qz);
+
+centerpnt = [0.2,0.2,0]; %0.3,0.4,0
+side = 0.2;
+plotOptions.plotFaces = true;
+[vertex,faces,faceNormals] = RectangularPrism(centerpnt-side/2, centerpnt+side/2,plotOptions);
+
+q2 =[0.6709    0.6310    1.1471   -0.6709 0];
+
+qMatrix = jtraj(qz,q2,20);
+r.animate(qMatrix);
+%r.teach;
 
 
 %% 
@@ -53,5 +63,16 @@ r = DobotMagician;
 qn = [0 0 0 0 0];
 qz = [0 pi/6 pi/3 0 0]
 r.Plot(qz);
+% q2 = 
+
+centerpnt = [0.2,0.2,0]; %0.3,0.4,0
+side = 0.2;
+plotOptions.plotFaces = true;
+[vertex,faces,faceNormals] = RectangularPrism(centerpnt-side/2, centerpnt+side/2,plotOptions);
+
+
+%%
+q2 =[0.6709    0.6310    1.1471   -0.6709 0]
+deg2rad([0.6709    0.6310    1.1471   -0.6709 0])
 
 

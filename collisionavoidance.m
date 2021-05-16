@@ -33,33 +33,26 @@ plotply('Rtile.ply',transl(0.12+centredistance,0.08+tilesize,tableheight));
 tile5 = transl(0.12+centredistance,0.08+tilesize,tableheight);
 
 % Give Path ie home position to a tile
-q1 = [0 pi/6 pi/3 0];
+q1 = [0 pi/6 pi/3 0 0];
 dobot.Plot(q1);
-q2 = dobot.Ikine(tile4);
+% q2 = [ 0 0 0 0 ];
+q2 = dobot.Ikine(tile5);
+q2(1,5) = 0; %adding a zero so Indexing works
+
+% q2 =[0.6709    0.6310    1.1471   -0.6709 0];
 % r.Fkine(q2)
 % qMatrix = jtraj(q1,q2,20);
 % r.Animate(qMatrix);
 
 %Load obstacle
-%Sphere
-% sphereCenter = [0.22,0.09,-0.07]; %hardcoded
-% radius = 0.01;
-% [X,Y,Z] = sphere(10);
-% X = X * radius + sphereCenter(1);
-% Y = Y * radius + sphereCenter(2);
-% Z = Z * radius + sphereCenter(3);
-% % Plot 
-% tri = delaunay(X,Y,Z);
-% sphereTri_h = trimesh(tri,X,Y,Z);
-% drawnow();
 %Cube
-centerpnt = [0.22,0.09,-0.07];
-side = 0.02;
+centerpnt = [0.2,0.09,-0.09];
+side = 0.05;
 plotOptions.plotFaces = true;
 [vertex,faces,faceNormals] = RectangularPrism(centerpnt-side/2, centerpnt+side/2,plotOptions);
 
 %% Collision Checking
-
+% Get the transform of every joint (i.e. start and end of every link)
 tr = zeros(4,4,dobot.model.n+1);
 tr(:,:,1) = dobot.model.base;
 L = dobot.model.links;
@@ -92,27 +85,32 @@ qMatrix = jtraj(q1,q2,steps);
 result = true(steps,1);
 for i = 1: steps
     result(i) = IsCollision(dobot,qMatrix(i,:),faces,vertex,faceNormals,false);
-    dobot.Animate(qMatrix(i,:));
+%      dobot.Animate(qMatrix(i,:));
 end
-
+% if IsCollision(dobot,qMatrix,faces,vertex,faceNormals)
+%     error('Collision detected!!');
+% else
+%     display('No collision found');
+% end
+% 
 
 %% Collision Avoidance
 
 %Method 1 try
 
 % dobot.Animate(q1);
-% 
-% qWaypoints = [q1 ...
-%     ; -pi/4,deg2rad([-111,-72]) ...
+% q1 = [0 pi/6 pi/3 0 0]
+qWaypoints = [q1 ...
+%     ; 0,deg2rad([-111,-72]) ...
 %     ; deg2rad([169,-111,-72]) ...
-%     ; q2];
-% qMatrix = InterpolateWaypointRadians(qWaypoints,deg2rad(5));
-% if IsCollision(robot,qMatrix,faces,vertex,faceNormals)
-%     error('Collision detected!!');
-% else
-%     display('No collision found');
-% end
-% robot.animate(qMatrix);
+    ; q2];
+qMatrix = InterpolateWaypointRadians(qWaypoints,deg2rad(5));
+if IsCollision(dobot,qMatrix,faces,vertex,faceNormals)
+    error('Collision detected!!');
+else
+    display('No collision found');
+end
+robot.animate(qMatrix);
 
 %Method 2 Try
 
