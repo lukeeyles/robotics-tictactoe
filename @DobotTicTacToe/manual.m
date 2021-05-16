@@ -6,7 +6,7 @@ robot = self.dobot;
 oldpos = robot.Fkine(oldq);
 
 % translate proportional to velocity given
-newpos = oldpos*transl(gain*v);
+newpos = transl(gain*v)*oldpos;
 newq = robot.Ikine(newpos);
 robot.Animate(newq);
 end
