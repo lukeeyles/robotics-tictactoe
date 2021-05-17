@@ -15,3 +15,6 @@ qdot = JDLSinv*v';
 % qdot = inv(J)*v';
 qModel = self.qRealToModel(qReal) + (dt*[qdot;0;0])';
 qReal = self.qModelToReal(qModel);
+
+% clamp values to qlim
+qReal = clamp(qReal, self.qlimReal(:,1)', self.qlimReal(:,2)');
