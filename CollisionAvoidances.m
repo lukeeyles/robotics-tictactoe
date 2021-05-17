@@ -29,8 +29,11 @@ if any(result)
     disp('Start Avoidance');
 %     qWaypoints = [q1; dobot.Ikine(transl(0.03+cx,cy-0.03,0.07+cz)),0 ;...
 %                 dobot.Ikine(transl(0.03+cx,cy+0.03,0.07+cz)),0; q2];
-    qWaypoints = [dobot.Ikine(transl(0.23, 0.06,0.07));...
-                dobot.Ikine(transl(0.23,0.12,0.07)); q2];
+%     qWaypoints = [dobot.Ikine(transl(0.23, 0.06,0.07));...
+%                 dobot.Ikine(transl(0.23,0.12,0.07)); q2];
+    waypoint1 = q1;
+    waypoint1(3) = 0;
+    qWaypoints = [waypoint1; dobot.Ikine(transl(0.23, 0 ,0.07)); q2];
             
     qMatrix = InterpolateWaypointRadians(qWaypoints,deg2rad(5));
 
