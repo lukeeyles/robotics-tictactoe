@@ -81,7 +81,7 @@ function PopulateEnvironment(self)
     
     % plot obstacle
     centerpnt = [0.12+self.centredistance,0.08,self.tableheight+0.025];
-    side = 0.05;
+    side = 0.035;
     plotOptions.plotFaces = true;
     [self.vertex,self.faces,self.faceNormals] = RectangularPrism(centerpnt-side/2, centerpnt+side/2,plotOptions);
 end
