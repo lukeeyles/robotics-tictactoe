@@ -79,7 +79,7 @@ while self.game.CheckWin < 0
         qabovedropoff = self.dobot.Ikine(transl(0,0,0.02)*moveloc*pickupT); % above dropoff
         steps = 20;
         Q(1,:) = self.dobot.GetPos();
-        Q(2,:) = qabovepickup;
+        Q(2,:) = self.dobot.Ikine(self.rtiles(self.tilei).T*pickupT); % go to tile
         Q(3,:) = self.dobot.Ikine(self.rtiles(self.tilei).T*pickupT); % go to tile
         Q(4,:) = qabovepickup;
         %Q(5,:) = qDefault; % move back to qn
