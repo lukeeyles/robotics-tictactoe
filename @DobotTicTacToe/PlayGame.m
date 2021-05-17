@@ -26,7 +26,6 @@ end
 pickupT = transl(0,0,0);
 
 % robot is player 2, human is player 1
-%h = PlotTiles(self.tileloc);
 for i = 1:numel(self.rtiles)
     self.rtiles(i).Plot();
 end
@@ -76,20 +75,40 @@ while self.game.CheckWin < 0
         moveloc = self.boardsquares(:,:,move(1),move(2));
         
         % find poses to pick up and place down tile
+        qabovepickup = self.dobot.Ikine(transl(0,0,0.02)*self.rtiles(self.tilei).T*pickupT); % above tile
+        qabovedropoff = self.dobot.Ikine(transl(0,0,0.02)*moveloc*pickupT); % above dropoff
         steps = 20;
         Q(1,:) = self.dobot.GetPos();
-        qabovepickup = self.dobot.Ikine(transl(0,0,0.02)*self.rtiles(self.tilei).T*pickupT); % above tile
-        [Q(2,:),error1] = self.dobot.Ikine(self.rtiles(self.tilei).T*pickupT); % go to tile
-        % above again
-        Q(3,:) = qDefault; % move back to qn
-        qabovedropoff = self.dobot.Ikine(transl(0,0,0.02)*moveloc*pickupT); % above dropoff
-        [Q(4,:),error2] = self.dobot.Ikine(moveloc*pickupT); % place down tile
-         % above dropoff
-        error2
-        Q(5,:) = qDefault; % back to qn
-        qtotile = jtraj(Q(1,:),Q(2,:),steps);
-        qpickedup = [jtraj(Q(2,:),Q(3,:),steps);jtraj(Q(3,:),Q(4,:),steps)];
-        qfromtile = jtraj(Q(4,:),Q(5,:),steps);
+        Q(2,:) = qabovepickup;
+        Q(3,:) = self.dobot.Ikine(self.rtiles(self.tilei).T*pickupT); % go to tile
+        Q(4,:) = qabovepickup;
+        %Q(5,:) = qDefault; % move back to qn
+        Q(5,:) = qabovedropoff;
+        Q(6,:) = self.dobot.Ikine(moveloc*pickupT); % place down tile
+        Q(7,:) = qabovedropoff;
+        Q(8,:) = qDefault; % back to qn
+        
+        Qavoid = Q(1,:);
+        for i = 2:3
+            Qavoid = [Qavoid;CollisionAvoidances(Q(i-1,:),Q(i,:),self.dobot,self.faces,self.vertex,self.faceNormals)];
+        end
+        qtotile = InterpolateQMatrix(Qavoid,steps);
+        
+        Qavoid = Q(3,:);
+        for i = 4:6
+            Qavoid = [Qavoid;CollisionAvoidances(Q(i-1,:),Q(i,:),self.dobot,self.faces,self.vertex,self.faceNormals)];
+        end
+        qpickedup = InterpolateQMatrix(Qavoid,steps);
+        
+        Qavoid = Q(6,:);
+        for i = 7:8
+            Qavoid = [Qavoid;CollisionAvoidances(Q(i-1,:),Q(i,:),self.dobot,self.faces,self.vertex,self.faceNormals)];
+        end
+        qfromtile = InterpolateQMatrix(Qavoid,steps);
+        
+%         qtotile = jtraj(Q(1,:),Q(2,:),steps);
+%         qpickedup = [jtraj(Q(2,:),Q(3,:),steps);jtraj(Q(3,:),Q(4,:),steps)];
+%         qfromtile = jtraj(Q(4,:),Q(5,:),steps);
         
         % move real robot
         if self.realrobot
