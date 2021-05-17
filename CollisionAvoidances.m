@@ -1,10 +1,9 @@
 %Collision Avoidance function
 
 function [qWaypoints] = CollisionAvoidances(q1,q2,dobot,faces,vertex,faceNormals)
-
 q = zeros(1,4);
 %q2(1,5) = 0;
-qWaypoints = [q1;q2];
+qWaypoints = [q2];
 
 % Collision Checking
 % Get the transform of every joint
@@ -30,7 +29,7 @@ if any(result)
     disp('Start Avoidance');
 %     qWaypoints = [q1; dobot.Ikine(transl(0.03+cx,cy-0.03,0.07+cz)),0 ;...
 %                 dobot.Ikine(transl(0.03+cx,cy+0.03,0.07+cz)),0; q2];
-    qWaypoints = [q1; dobot.Ikine(transl(0.23, 0.06,0.07)) ;...
+    qWaypoints = [dobot.Ikine(transl(0.23, 0.06,0.07));...
                 dobot.Ikine(transl(0.23,0.12,0.07)); q2];
             
     qMatrix = InterpolateWaypointRadians(qWaypoints,deg2rad(5));
