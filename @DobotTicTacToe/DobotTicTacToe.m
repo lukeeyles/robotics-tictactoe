@@ -11,7 +11,7 @@ properties
         0 484.7421 297.6908;
         0 0 1.0000];
     cameraT;
-    tableheight = -0.12; % height of table
+    tableheight = -0.14+0.056; % height of table
     centredistance = 0.155/2; % distance from edge of robot to centre
     boardloc;
     boardsquares; % location of all squares on board relative to centre of robot
@@ -27,6 +27,8 @@ properties
 end
 
 methods
+react = Obstruction(self, d);
+    
 function self = DobotTicTacToe(realrobot)
     if nargin < 1
         self.realrobot = false;
@@ -58,6 +60,19 @@ function self = DobotTicTacToe(realrobot)
     self.cammodel = CentralCamera('focal', 483, 'pixel', 1, ...
     'resolution', [640 480], 'centre', [315 298], 'name', 'mycamera');
     self.cammodel.T = self.cameraT;
+end
+
+function PopulateEnvironment(self)
+    figure('Name',"Dobot Tic Tac Toe");
+    hold on;
+    
+    % plot table, fence, floor, walls
+    plotply("Table5.ply",self.dobot.model.base*transl([0 0 0]));
+    plotply("Box.ply",self.boardloc);
+    
+    % plot workspace
+    self.dobot.Plot(self.dobot.qn);
+    self.cammodel.plot_camera('scale',0.05);
 end
 
 function obstruction = SenseObstruction(self,currentimage,referenceimage,error)
