@@ -24,6 +24,11 @@ properties
     tilei;
     rtiles;
     btiles;
+    
+    % obstacle
+    vertex;
+    faces;
+    faceNormals;
 end
 
 methods
@@ -73,6 +78,12 @@ function PopulateEnvironment(self)
     % plot workspace
     self.dobot.Plot(self.dobot.qn);
     self.cammodel.plot_camera('scale',0.05);
+    
+    % plot obstacle
+    centerpnt = [0.12+self.centredistance,0.08,self.tableheight+0.025];
+    side = 0.05;
+    plotOptions.plotFaces = true;
+    [self.vertex,self.faces,self.faceNormals] = RectangularPrism(centerpnt-side/2, centerpnt+side/2,plotOptions);
 end
 
 function obstruction = SenseObstruction(self,currentimage,referenceimage,error)
@@ -165,7 +176,7 @@ function Reset(self)
         GameTile(f,transl(0.12+self.centredistance,-0.08,self.tableheight)),...
         GameTile(f,transl(0.16+self.centredistance,-0.08,self.tableheight)),...
         GameTile(f,transl(0.08+self.centredistance,0.08,self.tableheight)),...
-        GameTile(f,transl(0.12+self.centredistance,0.08,self.tableheight))];
+        GameTile(f,transl(0.16+self.centredistance,0.08,self.tableheight))];
 %     self.tiles = cat(3,transl(0.08+self.centredistance,-0.08,self.tableheight),...
 %         transl(0.12+self.centredistance,-0.08,self.tableheight),transl(0.16+self.centredistance,-0.08,self.tableheight),...
 %         transl(0.08+self.centredistance,0.08,self.tableheight),transl(0.12+self.centredistance,0.08,self.tableheight));
